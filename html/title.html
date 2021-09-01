@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>聊天页面</title>
+</head>
+
+<body>
+  <button id="notifyButton">弹出</button>
+  <button id="requestButton">请求</button>
+  <script>
+    // 修改title
+    /* let msgNum = 1 // 消息条数
+    let cnt = 0 // 计数器
+    const inerval = setInterval(() => {
+      cnt = (cnt + 1) % 2
+      if (msgNum === 0) {
+        // 通过DOM修改title
+        document.title += `聊天页面`
+        clearInterval(interval)
+        return
+      }
+      const prefix = cnt % 2 ? `新消息(${msgNum})` : ''
+      document.title = `${prefix}聊天页面`
+    }, 1000) */
+    // 桌面通知
+    if (window.Notification) {
+      let ua = navigator.userAgent.toLowerCase();
+      if (ua.indexOf('safari') != -1) {
+        if (ua.indexOf('chrome') > -1) {
+          // Chrome
+          Notification.requestPermission().then(function (permission) {
+            if (permission == "granted") {
+              console.log(' dasd ');
+              let notification = new Notification('桌面推送', {
+                body: '这是我的第一条桌面推送',
+                icon: 'some/icon/url'
+              });
+              notification.onclick = function () {
+                console.log('点击');
+                notification.close();
+              };
+            } else {
+              Notification.requestPermission();
+              console.log('没有权限,用户拒绝:Notification');
+            }
+          });
+        } else {
+          // Safari
+          Notification.requestPermission(function (permission) {
+            if (permission == "granted") {
+              let notification = new Notification('桌面推送', {
+                body: '这是我的第一条桌面推送',
+                icon: 'some/icon/url'
+              });
+              notification.onclick = function () {
+                console.log('点击');
+                notification.close();
+              };
+            } else {
+              Notification.requestPermission();
+              console.log('没有权限,用户拒绝:Notification');
+            }
+          })
+        }
+      }
+    } else {
+      console.log('不支持Notification');
+    }
+
+  </script>
+</body>
+
+</html>

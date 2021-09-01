@@ -20,6 +20,32 @@
 <meta http-equiv="description" content="This is my page" />
 ```
 
+##### 消息提醒
+
+HTML5 标准发布之前，浏览器没有开放图标闪烁、弹出系统消息之类的接口，只能借助一些 Hack 的手段，比如修改 title 标签来达到类似的效果（HTML5 下可使用 Web Notifications API 弹出系统消息）。
+
+```js
+let msgNum = 1; // 消息条数
+let cnt = 0; // 计数器
+const inerval = setInterval(() => {
+  cnt = (cnt + 1) % 2;
+  if (msgNum === 0) {
+    // 通过DOM修改title
+    document.title += `聊天页面`;
+    clearInterval(interval);
+    return;
+  }
+  const prefix = cnt % 2 ? `新消息(${msgNum})` : "";
+  document.title = `${prefix}聊天页面`;
+}, 1000);
+```
+
+通过模拟消息闪烁，可以让用户在浏览其他页面的时候，及时得知服务端返回的消息。
+
+HTML5 Notifications API
+
+允许网页或应用程序在系统级别发送在页面外部显示的通知，Notification 生成的消息不依附于某个页面，仅仅依附于浏览器，避免传统本页面内接收消息的方式无法跨页面的问题。
+
 #### DOM
 
 操作耗时：

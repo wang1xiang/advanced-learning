@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script>
+    console.time('timer');
+    console.timeLog('timer', '--- Start parsing HTML');
+    document.addEventListener('DOMContentLoaded', function () {
+      console.timeLog('timer', '--- Document loaded');
+    });
+  </script>
+</head>
+
+<body>
+  <p>
+    Lorem ipsum dolor sit amet consectetur adipisicing elit. Explicabo harum velit itaque assumenda, quibusdam
+    obcaecati suscipit quasi odit accusantium soluta qui, debitis quae iusto? Nobis ratione ut nesciunt a minima.
+  </p>
+  <!-- 此处省略500行重复元素 -->
+  <script>console.timeLog('timer', '--- Start loading 1.js')</script>
+  <script src='./1.js'></script>
+  <script>console.timeLog('timer', '--- Start loading 2.js')</script>
+  <script src='./2.js'></script>
+  <script>console.timeLog('timer', '--- Start loading 3.js')</script>
+  <script src='./3.js'></script>
+  <!-- 此处省略1500行重复元素 -->
+  <p>
+    Lorem ipsum dolor sit amet consectetur adipisicing elit. Explicabo harum velit itaque assumenda, quibusdam
+    obcaecati suscipit quasi odit accusantium soluta qui, debitis quae iusto? Nobis ratione ut nesciunt a minima.
+  </p>
+  <script>
+    console.timeLog('timer', '--- End parsing HTML')
+  </script>
+</body>
+
+</html>

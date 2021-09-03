@@ -154,10 +154,53 @@ DOM 主要由三部分构成：DOM 节点、DOM 事件、选择区域（一般�
 种类：键盘事件、鼠标事件、表单事件等
 
 - 防抖
+  函数防抖是函数短时间内连续触发时，在规定时间内，函数只会执行一次
+
+  ```js
+  function debounce(fn, delay) {
+    let timer = null;
+    return function (...args) {
+      timer && clearTimeout(timer);
+      timer = setTimeout(() => {
+        fn.apply(this, ...args);
+      }, delay);
+    };
+  }
+  ```
 
 - 节流
+  函数节流是短时间内大量触发同一时间，在函数执行一次之后，在指定的时间内不再被执行，直到过了这段时间才重新生效
+
+  ```js
+  function throttle(fn, delay) {
+    let lastTime = 0;
+    return function (...args) {
+      const currentTime = new Date().getTime();
+      if (currentTime - lastTime > delay) {
+        fn.apply(this, ...args);
+        lastTime = currentTime;
+      }
+    };
+  }
+  ```
+
+  区别：防抖函数限制多长时间才能执行一次，节流函数限制多长时间必须执行一次，一个限制上限，一个限制下限，与防抖相比，节流函数最主要的不同在于它保证在指定时间内至少执行一次函数
 
 - 代理（事件代理或事件委托）
+
+  - DOM 事件流
+
+    - 捕获阶段：从 window 进入事件目标阶段
+    - 目标阶段：目标阶段
+    - 冒泡阶段：从事件目标回到 window
+
+  - 事件捕获
+    事件发生时，在捕获阶段，事件会从最外层元素逐级往下执行响应函数
+  - 事件冒泡
+    事件发生时，先触发目标元素的事件响应函数，再逐级向上执行父元素的事件响应函数，直到 window 停止
+
+    事件委托就是利用事件冒泡，只指定一个事件处理程序，就可以管理某一类型的所有事件。
+    事件委托：不监听元素 C 自身，而是监听其祖先元素 P，然后判断 e.target 是不是该元素 C（或该元素的子元素）
 
 DOM 事件标准
 

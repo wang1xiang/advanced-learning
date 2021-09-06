@@ -224,6 +224,8 @@ DOM 事件标准
 
 #### css 代码管理
 
+管理样式文件的作用是让开放人员更方便的维护代码，样式文件进行分类，将相关的文件放在一起
+
 全局样式、公共样式
 
 组件样式
@@ -239,6 +241,111 @@ BEM block element modify
 CSS in JavaScript
 
 #### 手写 css 预处理
+
+主要实现功能：
+
+- 用空格和换行符代替花括号、冒号和分号
+- 支持选择器的嵌套组合
+- 支持以'$'符号开头的变量定义和使用
+
+编译器的工作流程：
+
+1. 解析(parsing)
+
+   - 词法分析
+     词法分析就是将接收到的源代码转换成令牌，完成这个过程的工具叫做词法分析器
+   - 语法分析
+     代码令牌化之后会进入语法分析，会将之前的令牌转换为一种带有令牌关系描述的抽象表示，即 AST 抽象语法树，完成这个过程的工具叫语法分析器
+
+2. 转换(Transformation)
+   代码解析为 AST 抽象语法树后，通过转换器进一步修改，便于代码生成
+3. 代码生成(Code Generation)
+   根据转换后的 AST 生成目标代码
+
+代码实现：
+
+1. 词法分析
+   令牌对象包括：变量（变量定义和使用）、变量值、选择器、属性和属性值，由于缩进会对语法分析产生影响，所以也要加入令牌对象
+
+   ```js
+   {
+    type: "variableDef" | "variableRef" | "selector" | "property" | "value", //枚举值，分别对应变量定义、变量引用、选择器、属性、值
+    value: '', // token字符串，即被分解的字符串
+    indent: number // 缩进空格数，需要根据它判断从属关系
+   }
+   /*
+    variableDef，以“$”符号开头，该行前面无其他非空字符串；
+    variableRef，以“$”符号开头，该行前面有非空字符串；
+    selector，独占一行，该行无其他非空字符串；
+    property，以字母开头，该行前面无其他非空字符串；
+    value，非该行第一个字符串，且该行第一个字符串为 property 或 variableDef 类型。
+    */
+   ```
+
+   ```js
+   function tokenize(text) {
+     return text
+       .trim()
+       .split(/\n|\r\n/)
+       .reduce((tokens, line, idx) => {
+         const spaces = line.match(/^\s+/) || [""];
+         const indent = spaces[0].length;
+         const input = line.trim();
+         const words = input.split(/\s/);
+         let value = words.shift();
+         if (words.length === 0) {
+           tokens.push({
+             type: "selector",
+             value,
+             indent,
+           });
+         } else {
+           let type = "";
+           if (/^\$/.test(value)) {
+             type = "variableDef";
+           } else if (/^[a-zA-Z-]+$/.test(value)) {
+             type = "property";
+           } else {
+             throw new Error(
+               `Tokenize error:Line ${idx} "${value}" is not a vairable or property!`
+             );
+           }
+           tokens.push({
+             type,
+             value,
+             indent,
+           });
+           while ((value = words.shift())) {
+             tokens.push({
+               type: /^\$/.test(value) ? "variableRef" : "value",
+               value,
+               indent: 0,
+             });
+           }
+         }
+         return tokens;
+       }, []);
+   }
+   ```
+
+2. 语法分析
+   将词法分析得到的令牌数组转换为抽象语法树，树结构具有层级关系（选择器与选择器、选择器与属性存在层级关系）
+
+   ```js
+   {
+     type: 'root',
+     children: [{
+      type: 'selector',
+      value: 'string',
+       rules: [{
+         property: 'string',
+         value: 'string'[],
+       }],
+       indent: number,
+       children: []
+     }]
+   }
+   ```
 
 #### 浏览器如何渲染页面
 
@@ -364,3 +471,83 @@ HTTPS
 - 页面跨域解决方案
   postMessage
   改域
+
+#### 前后端如何有效沟通
+
+REST
+接口松散
+数据冗余
+
+GraphQL--图表查询语言
+提供三种操作
+查询（Query）
+
+    - 别名
+    - 片段
+    - 内省
+
+变更（Mutation）
+订阅（Subscription）
+
+GraphQL 与 typeScript 类型定义类似，在一些高级功能（联合类型和接口定义）上也有异曲同工之妙
+
+数据操作－－解析器
+
+#### 如何理解组件
+
+1. vue 模板编译器解析过程
+
+   - 解析 生成 AST
+   - 优化 标记静态 AST 节点
+   - 生成代码 遍历 AST 解析对应的 html
+
+2. react 使用 jsx 编写
+
+##### 虚拟 DOM
+
+- 性能优化
+- 跨平台
+
+#### 路由放在前端的意义
+
+浏览器 URL 变化时请求对应的网络资源,负责响应这个网络资源的服务就称为路由
+
+前端路由重要基础:
+
+1. 修改 URL 时不发送请求
+   基于 hash 实现(hash 值得变化不会触发浏览器发送请求, 占用浏览器跳转功能)
+   基础 history 实现(会向服务端发送请求,所以需设置服务端将所有 URL 请求转向前端页面)
+2. 路由解析
+   路由匹配 使用插件 path-to-Regexp
+3. 路由生成
+   通过配置的请求路径字符串和参数生成对应得请求路径
+
+#### 组件通信--状态管理
+
+- 父子组件通信
+- 非父子组件
+
+可预测
+中心化
+可调式
+
+状态管理库实现原理
+
+其他通信方式
+
+1. 全局上下文
+2. 事件监听 全局事件代理
+
+#### 代码编译
+
+webpack 入口
+分别是通过命令行调用的 bin/webpack.js
+
+- 检验配置项
+  validateSchema
+- 创建编译器
+  createCompiler()返回 compiler
+  4 种钩子函数
+- 执行编译
+  调用 compile 函数
+  以及直接在代码中引用的 lib/webpack.js

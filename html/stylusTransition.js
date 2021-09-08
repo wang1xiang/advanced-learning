@@ -1,11 +1,15 @@
 function tokenize(text) {
   text = text.trim().split(/\n|\r\n/)
   return text.reduce((tokens, line, idx) => {
+    // ('  a sdsad'.match(/^\s+/)); [ '  ', index: 0, input: '  a sdsad', groups: undefined ]
+    // match使用g时返回数组包含所有匹配到的数据，未使用g全局查找时返回第一个匹配及index开始位置、input搜索的字符串、groups一个捕获数组或undefined
+    // 正则表达式不包含 g 标志，str.match() 将返回与 RegExp.exec(). 相同的结果。
     const spaces = line.match(/^\s+/) || [""];
     const indent = spaces[0].length;
     const input = line.trim();
     const words = input.split(/\s/);
     let value = words.shift();
+    // 选择器（去除前后空格、中间不存在空格则为选择器）
     if (words.length === 0) {
       tokens.push({
         type: "selector",
@@ -14,6 +18,7 @@ function tokenize(text) {
       });
     } else {
       let type = "";
+      // 以$开头时定义变量
       if (/^\$/.test(value)) {
         type = "variableDef";
       } else if (/^[a-zA-Z-]+$/.test(value)) {

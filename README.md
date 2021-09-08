@@ -400,18 +400,86 @@ Html 文档转换为 DOM 的过程
 Object 键值对集合
 深浅拷贝
 
-#### 函数 javaScript 一等公民
+#### 函数是 javaScript 一等公民
 
-this 关键字
-函数的转换
-原型和原型链
-new 操作符实现了什么
-怎么实现原型链实现多层继承
-typeof 和 instanceof
-作用域
-全局、块级、函数
-命名提升
-闭包
+js 中函数很复杂，可以有属性，也可以被赋值给一个变量，还可以作为参数传递，所以让它称为 JavaScript 的”一等公民”
+
+- this 关键字
+  this 指代“函数执行的上下文对象”，这个对象值“调用它”的对象，如果这个对象不存在则指向全局对象（严格模式下为 undefined）
+  箭头函数的 this 继承自上层的 this
+  箭头函数和普通函数对比：
+
+  1. 不绑定 arguments 对象，所以箭头函数内不能访问 arguments
+  2. 不能用作构造器，就是不能通过 new 来创建实例
+  3. 默认不会创建 prototype 原型属性
+  4. 不能用作 Generator 函数，不能使用 yeild 关键字
+
+  原型和原型链
+  原型是对象的属性，包括被称为隐式原型的`__proto__`属性和被称为显示原型的 prototype 属性
+
+  ```js
+  var a = {}; // 创建实例时隐式原型会自动指向构造函数的显示原型 显示原型是内置对象的默认属性
+  a.__proto__ === Object.prototype; // true
+  var b = new Object();
+  b.__proto__ === a.__proto__; // true
+  ```
+
+- new 操作符实现了什么
+  new 操作符在创建实例的时候会自动创建隐式原型,下面的代码通过 new 关键字创建了一个函数 F() 的实例。
+
+  ```js
+  function F(init) {}
+  var f = new F(args);
+  ```
+
+  new 的过程
+
+  1. 创建一个新的空对象
+  2. 将构造函数的作用域赋给新对象 （因此 this 就指向了新对象）
+  3. 执行构造函数中的代码（为这个新对象添加属性）
+  4. 返回新对象
+
+  [具体实现](https://github.com/wang1xiang/learning-notes/blob/master/%E9%9D%A2%E8%AF%95%E7%9B%B8%E5%85%B3/js/myNew.js)
+
+- 怎么实现原型链实现多层继承
+  ES6 直接使用 extends 实现,ES5 使用原型链的方式实现
+  typeof 和 instanceof
+- 作用域
+  作用域是指赋值、取值操作的执行范围，通过作用域机制可以有效地防止变量、函数的重复定义，以及控制它们的可访问性。
+  虽然在浏览器端和 Node.js 端作用域的处理有所不同，比如对于全局作用域，浏览器会自动将未主动声明的变量提升到全局作用域，而 Node.js 则需要显式的挂载到 global 对象上。又比如在 ES6 之前，浏览器不提供模块级别的作用域，而 Node.js 的 CommonJS 模块机制就提供了模块级别的作用域。但在类型上，可以分为全局作用域（window/global）、块级作用域（let、const、try/catch）、模块作用域（ES6 Module、CommonJS）及本课时重点讨论的函数作用域。
+  全局、块级、函数
+  命名提升
+  var 关键字声明的变量及创建命名函数时,js 解析器在解析执行时会提升到作用域顶部,这就是命名提升
+  变量命名提升允许在同级作用域提前使用变量,函数命名提升则是可以提前调用
+
+  ```js
+  console.log(a); // undefined
+  var a = 1;
+  console.log(a); // 1
+  console.log(b); // ReferenceError: b is not defined
+  let b = 2;
+  ```
+
+- 闭包
+  函数内部访问函数作用域时就会产生闭包
+  闭包缓存对象
+
+  ```js
+  const SingleStudent = (function () {
+    let _student = "";
+    function Student() {}
+    return function () {
+      if (_student) {
+        return _student;
+      }
+      _student = new Student();
+      return _student;
+    };
+  })();
+  const s = new SingleStudent();
+  const s2 = new SingleStudent();
+  s === s2; // true
+  ```
 
 #### 代码没有按照编写的顺序执行
 

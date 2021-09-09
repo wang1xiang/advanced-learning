@@ -493,22 +493,125 @@ promise async...await...
 
 }) -->
 
+异步并行
 Promise.all([...])
 Promise.allSelected([...])
 Promise.race([...])
 
 #### 代码复用
 
-ES6 模块
+##### ES6 模块
 
-import 动态模块
+- 特点:强制自动采用严格模式;浏览器需添加 type="module"才能正确解析;为了与 NodeJs 默认的 CommonJs 规范区分,在 NodeJs 中使用时需要将后缀改为.mjs
 
-CommonJS
-AMD 异步加载
-CMD 懒加载 整合 Commonjs 和 AMD
-UMD 模块封装工具
+- 重要特性
 
-ES5 标准下如何编写模块
+  1. 值引用
+     export 输出的接口与其对应的值是动态绑定关系,即通过该接口可以获取模块内部实时的值,相当于浅拷贝;export default 是深拷贝
+
+     [测试用例]()
+
+     ```js
+     // a.js
+     export var a = "a";
+     var b = "b";
+     setTimeout(() => (a = "aa"), 500);
+     setTimeout(() => (b = "bb"), 500);
+     export default b;
+
+     // b.js
+     import b, { a } from "./a.js";
+     console.log(a, b); // 'a, b'
+     setTimeout(() => console.log(a, b), 1000); // 'aa, b'
+     ```
+
+  2. 静态分析
+     指不需要执行代码，只从字面量上对代码进行分析，方便优化代码体积，比如通过 tree-shaking 操作消除模块中没有被引用的无用代码
+
+- import 动态模块
+  ES2020 提出 import()函数支持动态导入模块，返回 Promise 对象
+
+  ```js
+  import(`./section-modules/${link.dataset.entryModule}.js`)
+    .then((module) => {
+      module.loadPageInto(main);
+    })
+    .catch((err) => {
+      main.textContent = err.message;
+    });
+  ```
+
+  import()函数违反上面静态说明的所有要求，并提供了更强大的功能特性
+
+  - 违反首部声明要求，意味着可以在代码运行时按需加载模块，用于首屏优化、路由或组件按需加载等
+  - 违反变量或表达式要求，可以根据参数动态加载模块
+  - 违反嵌入语句逻辑规则，可想像空间更大，比如可以通过 Promise.race 方式同时加载多个模块，选择加载速度最优模块来使用，从而提高性能
+
+##### CommonJS
+
+- 定义和引用
+  规定每个文件就是一个模块，有独立的作用域。每个模块对应一个 module 对象，包括以下属性：
+
+  - id：模块标识符，通常是带有绝对路径的模块文件名
+  - filename：模块的文件名，带有绝对路径
+  - loaded：返回布尔值，表示模块是否已经加载
+  - parent：表示调用该模块的模块，对象
+  - children：表示该模块要用到的模块，数组
+  - export：表示模块对外输出的值
+
+  引用模块使用 require 函数，作用是读入并执行一个 javascript 文件，返回该模块的 exports 对象
+
+- 特性
+  采用值拷贝和动态说明
+
+  ```js
+  // a.js
+  let a = "a";
+  setTimeout(() => (a = "a"), 500);
+  module.exports = a;
+  // b.js
+  let a = require("./a.js");
+  console.log(a); // a
+  setTimeout(() => console.log(a), 1000); // a
+  ```
+
+##### AMD 异步加载
+
+ES6 模块出现之前，AMD(Asynchronous Module Definition,异步模块加载)是一种很热门的浏览器模块化方案
+定义全局函数 define
+
+```js
+// id: 模块名称
+// dependencies：定义所依赖的模块
+// factory：模块初始化要执行的函数或对象
+defined(id?, dependencies?, factory);
+// 创建一个名为“alpha”的模块，依赖了 require、exports、beta 3 个模块，并导出了 verb 函数。
+define("alpha", ["require", "exports", "beta"], function (
+  require,
+  exports,
+  beta
+) {
+  exports.verb = function () {
+    return beta.verb();
+  };
+});
+```
+
+##### CMD（Common Module Definition，通用模块定义）
+
+CMD 整合 CommonJs 和 AMD 规范的特点，最大的特点就是懒加载，不需要在定义模块的时候声明依赖，可以在模块执行时动态加载模块
+
+##### UMD（Universal Module Definition，统一模块定义）
+
+其实并不是模块管理规范，而是带有前后端同构思想的模块封装工具。通过 UMD 可以在合适的环境选择对应的模块规范
+
+- 先判断是否支持 Node.js 模块格式（exports 是否存在），存在就是 Nodejs 模块格式
+- 再判断是否支持 AMD（defined 是否存在），存在则使用 AMD 方式加载模块
+- 若前两个都不存在，则将模块公开到全局（window 或 global）
+
+##### ES5 标准下如何编写模块
+
+模块的核心就是创建独立的作用域，使用立即执行函数：通过作用域链的特性，外部作用域无法访问内部作用域的变量，可以做到保护模块内的变量的作用，然后通过把需要公开的属性和方法挂载到 window 对象上，就实现了一个模块的封装
 
 #### js 不适合大型项目
 
@@ -523,9 +626,14 @@ typeScript
 
 ##### 内存管理
 
-栈和堆
+JavaScript 内存分为堆（Heap）和栈（Stack）
 
-新生代、老生代
+- 栈
+  栈是一个临时存储空间，栈中的数据都是轻量的，主要存储局部变量和函数调用，像基础类型的局部变量都会在栈中创建，对象类型的局部变量会存储在堆中，栈中只保存它的引用地址，也就是常说的浅拷贝原因。全局变量及闭包变量也只存储引用地址。
+  对于函数，v8 引擎创建了“调用栈（Call Stack）”来记录函数调用过程。函数调用就会被推入调用栈中，并创建对应的“栈帧（Stack Frame）”用来保存函数的局部变量及执行语句，执行结束后，对应的栈帧就会被销毁。
+  当分配的调用栈空间被占满时，就会引发“栈溢出”错误
+- 堆
+  堆空间的数据比较复杂，划分为五个区域：代码区（Code Space）、Map 区（Map Space）、大对象区（Large Object Space）、新生代（New Object）、老生代（Old Space)
 
 #### 区分浏览器的进程与线程
 
